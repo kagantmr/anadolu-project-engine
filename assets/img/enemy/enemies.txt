@@ -1,0 +1,43 @@
+Enemy 1 - Weak Ghost: 
+
+A generic ghost that appears around the village. Aksu usually is mad at them becasue they get too close. They love sticking their tongues out and scaring villagers.
+
+Enemy 2 - Strong Ghost:
+
+This one only appears on incidents and they attack stronger than regular ghosts. To distinguish them from regular ghosts, look at their tongues and eyes.
+
+Enemy 3 - Night Orb:
+
+These appear at night and patrol the mountain roads to hunt humans who get too far. If you're thinking to get a night walk without a weapon... think again.
+
+Enemy 4 - Magic Gear:
+
+These mechanical beasts appear around Hell gates, acting as guards to capture intruders. These also might be made of the spirits assigned to the Hell gate.
+
+Enemy 5 - Cursed Re-animated Arrow:
+
+These arrows are re-animated and they will rain down rapidly near Hell gates, as a guarding mechanism from Hell.
+
+Enemy 6 - Magic Hellfire:
+
+Hellfire inside the City of Hell can soar around and shoot bullets at you. Hellfire moves fast as well!
+
+Enemy 7 - Magma Flash:
+
+Forged from pure magma of Hell, these creatures are dedicated to the task of creating the guardline of the Hell City. They're slow, yet effective.
+
+Enemy 8 - Hell Gear:
+
+Hell Gears are gears forged with lava, making them warm and deadly.
+
+Enemy 9 - Hell's Cannon Bullets:
+
+If you got this far to see Hell Cannon's bullets, good job.
+These huge bullets guard the topmost point of Hell while you're climbing at it. Unlike most of the Magma Flashes, they summon a line of bullets too!
+
+Enemy 10 - Cold Sky Stars:
+
+These stars only appear a certain height above Hell. They are probably the last obstacle before your demise.
+
+
+
