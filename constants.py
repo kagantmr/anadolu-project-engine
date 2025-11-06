@@ -1,17 +1,22 @@
+
+# IMPORTS ---------------------------
 from json import load, dump
 from os import path, environ
 from sys import exit
 from platform import system
 from random import *
 import pygame as pg
+# -----------------------------------
 
 pg.init()
+pg.font.init()
 info = pg.display.Info()
 
+""" I have no genuine idea what this was for, maybe at some point it was for OpenGL testing? Because 
+    at some point I did try to use OpenGL to render backgrounds for some reason... keeping it though
+    bcuz I think it helped with fullscreen (which I kind of don't want to support anymore)."""
 if system() == 'Windows':
     environ['SDL_VIDEODRIVER'] = 'windib'
-
-
 
 class EngineError(Exception):
     pass
@@ -20,23 +25,47 @@ class EngineError(Exception):
 asset_folder = path.join(path.dirname(__file__), "assets")
 
 
-def read_from_table(file):
+def read_from_table(file: str) -> dict:
+    """
+    Wrapper around open() and json.load(), used in dialogue and ending cutscene routines.
+    
+    Parameters:
+        file (str): Name of the file to load located in "assets/".
+        
+    Returns:
+        dict: Parsed JSON contents of the file.
+    """
     with open(path.join(asset_folder, file), 'r', encoding='utf-8') as file:
         return load(file)
 
 
-def dump_into_table(content, file):
+def dump_into_table(content: dict, file: str) -> None:
+    """
+    Wrapper around open() and json.dump(), used to save progress.
+    
+    Parameters:
+        content (dict): The data to dump as a dict.
+        file (str): Name of the file to load located in "assets/".
+        
+    Returns:
+        dict: Parsed JSON contents of the file.
+    """
     with open(path.join(asset_folder, file), 'w', encoding='utf-8') as file:
         return dump(content, file)
 
+def load_font(font_name, size) -> pg.font.Font:
+    return pg.font.Font(path.join(font_folder, font_name + ".ttf"), size)
 
-translation = read_from_table('translation_table.json')
-records = read_from_table('records.json')
-full_screen = False
-pg.font.init()
-# Folder variables.
+translation = read_from_table('translation_table.json') # Load preferred translation file
+records = read_from_table('records.json') # Load the previous records (Currently has problems)
+full_screen = False # Due to issues with Tkinter full screen mode is disabled for now
+
+
+
+
+
+# ------------------------------------------------------------------------------------ Folder variables.
 game_folder = path.abspath(__file__)
-
 img_folder = path.join(path.dirname(__file__), "assets", "img")
 player_folder = path.join(path.dirname(__file__), "assets", "img", "player")
 projectile_folder = path.join(path.dirname(__file__), "assets", "img", "projectiles")
@@ -51,15 +80,35 @@ boss_folder = path.join(path.dirname(__file__), "assets", "img", "bosses")
 dialogue_folder = path.join(path.dirname(__file__), "assets", "dialogue")
 portrait_folder = path.join(path.dirname(__file__), "assets", "img", "portraits")
 ending_folder = path.join(path.dirname(__file__), "assets", "img", "endings")
+# ------------------------------------------------------------------------------------------------------
+
+def determine_center(collision: pg.sprite.Sprite) -> tuple:
+    """
+    Returns a random point in the range of 20 pixels around the bounding box of the sprite, to display animation effects. 
+    Could be inlined later? Turned into a lambda function?
+    
+    Parameters:
+        collision (pg.sprite.Sprite): The colliding sprite.
+        
+    Returns:
+        tuple: The random point to display animations in.
+    """
+    return randint(collision.rect.left - 20, collision.rect.right + 20), randint(collision.rect.top - 20, collision.rect.bottom + 20)
 
 
-def determine_center(collision) -> tuple:
-    x = randint(collision.rect.left - 20, collision.rect.right + 20)
-    y = randint(collision.rect.top - 20, collision.rect.bottom + 20)
-    return x, y
 
-
-def read_dialogue(file_name, encoding='utf-8'):
+def read_dialogue(file_name: str, encoding: str = 'utf-8') -> list[str]:
+    """
+    Reads a .dlg file into a list. The .dlg files are formatted as lines in the format of "location:image_name:text".
+    
+    
+    Parameters:
+        file_name (str): The name of the .dlg file to open.
+        encoding (str, optional): The type of encoding. Default is utf-8.
+        
+    Returns:
+        list[str]: The parsed dialogue in lines.
+    """
     with open(file_name, 'r', encoding=encoding) as file:
         new_text = []
         for text_line in file.readlines():
@@ -94,69 +143,13 @@ game_area = pg.Rect(180, 22, 599, 674)
 # Boss variables
 
 
-# Screen-related variables.
+# Screen-related variables
 width = 960
 height = 720
-screen = pg.display.set_mode((width, height), pg.HWSURFACE | pg.HWACCEL, vsync=1)
 
+screen = pg.display.set_mode((width, height), pg.HWSURFACE | pg.HWACCEL, vsync=1)
 info = pg.display.Info()
 
-'''
-# basic opengl configuration
-glViewport(0, 0, info.current_w, info.current_h)
-glDepthRange(0, 1)
-glMatrixMode(GL_PROJECTION)
-glMatrixMode(GL_MODELVIEW)
-glLoadIdentity()
-glShadeModel(GL_SMOOTH)
-glClearColor(0.0, 0.0, 0.0, 0.0)
-glClearDepth(1.0)
-glDisable(GL_DEPTH_TEST)
-glDisable(GL_LIGHTING)
-glDepthFunc(GL_LEQUAL)
-glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST)
-glEnable(GL_BLEND)
-
-texID = glGenTextures(1)
-
-
-def surfaceToTexture(pygame_surface):
-    global texID
-    rgb_surface = pg.image.tostring(pygame_surface, 'RGB')
-    glBindTexture(GL_TEXTURE_2D, texID)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP)
-    surface_rect = pygame_surface.get_rect()
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, surface_rect.width, surface_rect.height, 0, GL_RGB, GL_UNSIGNED_BYTE,
-                 rgb_surface)
-    glGenerateMipmap(GL_TEXTURE_2D)
-    glBindTexture(GL_TEXTURE_2D, 0)
-
-
-def open_gl_render(surface):
-    glClear(GL_COLOR_BUFFER_BIT)
-    glLoadIdentity()
-    glDisable(GL_LIGHTING)
-    glEnable(GL_TEXTURE_2D)
-    # glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-    # glClearColor(0, 0, 0, 1.0)
-
-    # draw texture openGL Texture
-    surfaceToTexture(surface)
-    glBindTexture(GL_TEXTURE_2D, texID)
-    glBegin(GL_QUADS)
-    glTexCoord2f(0, 0)
-    glVertex2f(-1, 1)
-    glTexCoord2f(0, 1)
-    glVertex2f(-1, -1)
-    glTexCoord2f(1, 1)
-    glVertex2f(1, -1)
-    glTexCoord2f(1, 0)
-    glVertex2f(1, 1)
-    glEnd()
-'''
 
 # Sprite images.
 player_sprite = load_image(0, 0, player_folder, "player0")
@@ -223,8 +216,7 @@ cutscene_b = read_dialogue(path.join(dialogue_folder, "cutscene_b.dlg"))
 cutscene_c = read_dialogue(path.join(dialogue_folder, "cutscene_c.dlg"))
 
 
-def load_font(font_name, size) -> pg.font.Font:
-    return pg.font.Font(path.join(font_folder, font_name + ".ttf"), size)
+
 
 
 font_1 = load_font('pc-9800', 20)
@@ -233,7 +225,8 @@ font_3 = load_font('pc-9800', 60)
 font_4 = load_font('win', 30)
 
 clock = pg.time.Clock()  # Brings the clock
-# Colors.
+
+# Colors
 white = (255, 255, 255)
 blue = (0, 0, 255)
 green = (0, 255, 0)
